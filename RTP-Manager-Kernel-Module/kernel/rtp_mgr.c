@@ -11,6 +11,7 @@
 
 #include <linux/module.h>
 #include <linux/kernel.h>
+#include <linux/version.h>
 #include <linux/fs.h>
 #include <linux/cdev.h>
 #include <linux/device.h>
@@ -315,7 +316,7 @@ static int rtpm_mmap(struct file *filp, struct vm_area_struct *vma)
     if (size > d->shared_len)
         return -EINVAL;
 
-    vma->vm_flags |= VM_DONTEXPAND | VM_DONTDUMP;
+    vm_flags_set(vma, VM_DONTEXPAND | VM_DONTDUMP);
 
     /* Map vmalloc'ed pages into user space */
     return remap_vmalloc_range(vma, d->shared, 0);
@@ -380,7 +381,12 @@ static int __init rtpm_init(void)
         return ret;
     }
 
-    g_dev.cls = class_create(THIS_MODULE, RTPM_DEVICE_NAME);
+    #if LINUX_VERSION_CODE < KERNEL_VERSION(6,4,0)
+       g_dev.cls = class_create(THIS_MODULE, RTPM_DEVICE_NAME);
+    #else
+       g_dev.cls = class_create(RTPM_DEVICE_NAME);
+    #endif
+
     if (IS_ERR(g_dev.cls)) {
         ret = PTR_ERR(g_dev.cls);
         pr_err("rtp_mgr: class_create failed: %d\n", ret);
@@ -427,6 +433,7 @@ static void __exit rtpm_exit(void)
 module_init(rtpm_init);
 module_exit(rtpm_exit);
 
+MODULE_AUTHOR("Bouncestone Technologies (Frederick Swartz)");
 MODULE_DESCRIPTION("RTP Manager Kernel Module (zero-copy mmap + ring control)");
 MODULE_AUTHOR("OpenAI-generated reference implementation");
-MODULE_LICENSE("MIT");
+MODULE_LICENSE("GPL");

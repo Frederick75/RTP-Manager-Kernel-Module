@@ -6,7 +6,11 @@
 #ifndef RTP_MGR_IOCTL_H
 #define RTP_MGR_IOCTL_H
 
+#ifdef __KERNEL__
+#include <linux/types.h>
+#else
 #include <stdint.h>
+#endif
 
 #define RTPM_IOCTL_MAGIC      0xB7
 #define RTPM_ABI_VERSION      0x00010001u  /* major.minor */
@@ -15,35 +19,58 @@
 
 /* Slot state */
 enum rtpm_slot_state {
-    RTPM_SLOT_FREE = 0,
-    RTPM_SLOT_READY = 1,
-    RTPM_SLOT_INUSE = 2,
+	RTPM_SLOT_FREE = 0,
+	RTPM_SLOT_READY = 1,
+	RTPM_SLOT_INUSE = 2,
 };
 
 /* Runtime config */
 struct rtpm_config {
-    uint32_t abi_version;
-    uint32_t ring_order;      /* slots = 2^ring_order */
-    uint32_t slot_payload;    /* bytes per slot payload */
-    uint32_t reserved;
+#ifdef __KERNEL__
+	u32 abi_version;
+	u32 ring_order;      /* slots = 2^ring_order */
+	u32 slot_payload;    /* bytes per slot payload */
+	u32 reserved;
+#else
+	uint32_t abi_version;
+	uint32_t ring_order;      /* slots = 2^ring_order */
+	uint32_t slot_payload;    /* bytes per slot payload */
+	uint32_t reserved;
+#endif
 };
 
 /* Slot descriptor (shared; user reads/writes payload via mmap) */
 struct rtpm_slot_desc {
-    uint32_t index;           /* ring slot index */
-    uint32_t payload_len;     /* bytes valid */
-    uint32_t rtp_seq;         /* optional: RTP sequence (user fills) */
-    uint32_t rtp_ts;          /* optional: RTP timestamp (user fills) */
+#ifdef __KERNEL__
+	u32 index;           /* ring slot index */
+	u32 payload_len;     /* bytes valid */
+	u32 rtp_seq;         /* optional: RTP sequence (user fills) */
+	u32 rtp_ts;          /* optional: RTP timestamp (user fills) */
+#else 
+	uint32_t index;           /* ring slot index */
+	uint32_t payload_len;     /* bytes valid */
+	uint32_t rtp_seq;         /* optional: RTP sequence (user fills) */
+	uint32_t rtp_ts;          /* optional: RTP timestamp (user fills) */
+#endif
 };
 
 /* Statistics */
 struct rtpm_stats {
-    uint64_t pkts_pushed;
-    uint64_t pkts_popped;
-    uint64_t bytes_pushed;
-    uint64_t bytes_popped;
-    uint64_t drops_ring_full;
-    uint64_t drops_no_ready;
+#ifdef __KERNEL__
+	u64 pkts_pushed;
+	u64 pkts_popped;
+	u64 bytes_pushed;
+	u64 bytes_popped;
+	u64 drops_ring_full;
+	u64 drops_no_ready;
+#else
+	uint64_t pkts_pushed;
+	uint64_t pkts_popped;
+	uint64_t bytes_pushed;
+	uint64_t bytes_popped;
+	uint64_t drops_ring_full;
+	uint64_t drops_no_ready;
+#endif
 };
 
 #ifdef __KERNEL__
@@ -53,7 +80,11 @@ struct rtpm_stats {
 #endif
 
 /* IOCTLs */
+#ifdef __KERNEL__
+#define RTPM_IOCTL_GET_ABI        _IOR(RTPM_IOCTL_MAGIC, 0x00, u32)
+#else
 #define RTPM_IOCTL_GET_ABI        _IOR(RTPM_IOCTL_MAGIC, 0x00, uint32_t)
+#endif
 #define RTPM_IOCTL_SET_CONFIG     _IOW(RTPM_IOCTL_MAGIC, 0x01, struct rtpm_config)
 #define RTPM_IOCTL_GET_CONFIG     _IOR(RTPM_IOCTL_MAGIC, 0x02, struct rtpm_config)
 
